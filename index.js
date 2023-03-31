@@ -4,6 +4,7 @@ class Game {
   init() {
     const field = document.querySelector(".field");
     this.map = this.generateMap();
+    this.generateRooms();
     field.style.width = 30 * this.map[0].length + "px";
     field.style.height = 30 * this.map.length + "px";
 
@@ -11,16 +12,37 @@ class Game {
   }
 
   generateMap() {
-    const width = randomInteger(15, 30);
-    const height = randomInteger(10, 20);
+    const width = randomInteger(20, 30);
+    const height = randomInteger(14, 20);
     const map = [...new Array(height)].map(() =>
       new Array(width).fill({
-        wall: true,
+        isWall: true,
         bonus: null,
+        personId: null,
       })
     );
 
     return map;
+  }
+
+  generateRooms() {
+    const roomsCount = randomInteger(5, 10);
+    for (let i = 0; i < roomsCount; i++) {
+      const width = randomInteger(3, 8);
+      const height = randomInteger(3, 8);
+      const x = randomInteger(0, this.map[0].length - 1);
+      const y = randomInteger(0, this.map.length - 1);
+
+      this.setRoom(width, height, x, y);
+    }
+  }
+
+  setRoom(width, height, x, y) {
+    for (let i = x; i < x + width && i < this.map[0].length; i++) {
+      for (let j = y; j < y + height && j < this.map.length; j++) {
+        this.map[j][i] = { ...this.map[j][i], isWall: false };
+      }
+    }
   }
 
   clear() {
@@ -31,7 +53,7 @@ class Game {
     for (let i = 0; i < map.length; i++) {
       for (let j = 0; j < map[0].length; j++) {
         const cell = document.createElement("div");
-        this.map[i][j].wall
+        this.map[i][j].isWall
           ? cell.classList.add("tileW")
           : cell.classList.add("tile");
         cell.style.left = j * 30 + "px";
@@ -64,7 +86,7 @@ class Person {
   }
 
   attack(enemy) {
-    if (enemy !== undefined) enemy.changeHp(-this.power);
+    if (enemy) enemy.changeHp(-this.power);
   }
 
   heal() {
