@@ -4,11 +4,10 @@ class Game {
   init() {
     const field = document.querySelector(".field");
     this.map = this.generateMap();
-    this.generateRooms();
     field.style.width = 30 * this.map[0].length + "px";
     field.style.height = 30 * this.map.length + "px";
 
-    this.renderMap(field, this.map);
+    this.renderMap(field);
   }
 
   generateMap() {
@@ -33,11 +32,35 @@ class Game {
       const x = randomInteger(0, this.map[0].length - 1);
       const y = randomInteger(0, this.map.length - 1);
 
-      this.setRoom(width, height, x, y);
+      this.setWall(width, height, x, y);
     }
   }
 
-  setRoom(width, height, x, y) {
+  generateLines() {
+    const lineCount = randomInteger(3, 5);
+    for (let i = 0; i < lineCount; i++) {
+      this.setWall(
+        this.map[0].length,
+        1,
+        0,
+        randomInteger(0, this.map.length - 1)
+      );
+    }
+  }
+
+  generateColumns() {
+    const columnCount = randomInteger(3, 5);
+    for (let i = 0; i < columnCount; i++) {
+      this.setWall(
+        1,
+        this.map.length,
+        randomInteger(0, this.map[0].length - 1),
+        0
+      );
+    }
+  }
+
+  setWall(width, height, x, y) {
     for (let i = x; i < x + width && i < this.map[0].length; i++) {
       for (let j = y; j < y + height && j < this.map.length; j++) {
         this.map[j][i] = { ...this.map[j][i], isWall: false };
@@ -49,9 +72,13 @@ class Game {
     this.map = null;
   }
 
-  renderMap(field, map) {
-    for (let i = 0; i < map.length; i++) {
-      for (let j = 0; j < map[0].length; j++) {
+  renderMap(field) {
+    this.generateRooms();
+    this.generateLines();
+    this.generateColumns();
+
+    for (let i = 0; i < this.map.length; i++) {
+      for (let j = 0; j < this.map[0].length; j++) {
         const cell = document.createElement("div");
         this.map[i][j].isWall
           ? cell.classList.add("tileW")
