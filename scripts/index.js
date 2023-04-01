@@ -166,11 +166,11 @@ class Game {
 
   onKeyDown(ev) {
     if (
-      ev.key !== "w" &&
-      ev.key !== "a" &&
-      ev.key !== "s" &&
-      ev.key !== "d" &&
-      ev.key !== " "
+      ev.code !== "KeyW" &&
+      ev.code !== "KeyA" &&
+      ev.code !== "KeyS" &&
+      ev.code !== "KeyD" &&
+      ev.code !== "Space"
     ) {
       return;
     }
@@ -180,8 +180,8 @@ class Game {
     );
     const heroNode = document.querySelector(".tileP");
 
-    switch (ev.key) {
-      case "w":
+    switch (ev.code) {
+      case "KeyW":
         if (
           hero.position.y - 1 >= 0 &&
           !this.ctx.map[hero.position.y - 1][hero.position.x].isWall
@@ -191,7 +191,7 @@ class Game {
           this.#checkBonus(hero);
         }
         break;
-      case "a":
+      case "KeyA":
         if (
           hero.position.x - 1 >= 0 &&
           !this.ctx.map[hero.position.y][hero.position.x - 1].isWall
@@ -202,7 +202,7 @@ class Game {
         }
         break;
 
-      case "s":
+      case "KeyS":
         if (
           hero.position.y + 1 < this.ctx.map.length &&
           !this.ctx.map[hero.position.y + 1][hero.position.x].isWall
@@ -213,7 +213,7 @@ class Game {
         }
         break;
 
-      case "d":
+      case "KeyD":
         if (
           hero.position.x + 1 < this.ctx.map[0].length &&
           !this.ctx.map[hero.position.y][hero.position.x + 1].isWall
@@ -224,7 +224,7 @@ class Game {
         }
         break;
 
-      case " ":
+      case "Space":
         const enemies = this.#findEnemies(hero);
         enemies.forEach((enemy) => {
           hero.attack(enemy, this.ctx);
