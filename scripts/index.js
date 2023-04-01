@@ -105,7 +105,7 @@ class Game {
       const bonus = new Bonus(type, { x, y });
       this.ctx.bonusList = [...this.ctx.bonusList, bonus];
 
-      const bonusNode = this.#createChild(x, y, bonusClass, bonus.id);
+      const bonusNode = this.#createChild(x, y, bonusClass, "bonus" + bonus.id);
 
       field.appendChild(bonusNode);
     }
@@ -115,19 +115,22 @@ class Game {
     for (let i = 0; i < characterCount; i++) {
       const [x, y] = this.#getRandomFreeCell();
 
-      this.ctx.characterList = [
-        ...this.ctx.characterList,
-        new Character(type, power, { x, y }),
-      ];
+      const character = new Character(type, power, { x, y });
+      this.ctx.characterList = [...this.ctx.characterList, character];
 
       const health = document.createElement("div");
       health.classList.add("health");
       health.style.width = "100%";
 
-      const character = this.#createChild(x, y, characterClass);
+      const characterNode = this.#createChild(
+        x,
+        y,
+        characterClass,
+        "character" + character.id
+      );
 
-      character.appendChild(health);
-      field.appendChild(character);
+      characterNode.appendChild(health);
+      field.appendChild(characterNode);
     }
   }
 
@@ -162,7 +165,13 @@ class Game {
   }
 
   onKeyDown(ev) {
-    if (ev.key !== "w" && ev.key !== "a" && ev.key !== "s" && ev.key !== "d") {
+    if (
+      ev.key !== "w" &&
+      ev.key !== "a" &&
+      ev.key !== "s" &&
+      ev.key !== "d" &&
+      ev.key !== " "
+    ) {
       return;
     }
 
@@ -192,6 +201,7 @@ class Game {
           this.#checkBonus(hero);
         }
         break;
+
       case "s":
         if (
           hero.position.y + 1 < this.ctx.map.length &&
@@ -202,6 +212,7 @@ class Game {
           this.#checkBonus(hero);
         }
         break;
+
       case "d":
         if (
           hero.position.x + 1 < this.ctx.map[0].length &&
@@ -212,9 +223,66 @@ class Game {
           this.#checkBonus(hero);
         }
         break;
+
+      case " ":
+        const enemies = this.#findEnemies(hero);
+        enemies.forEach((enemy) => {
+          hero.attack(enemy, this.ctx);
+          const enemyNode = document.getElementById("character" + enemy.id);
+          enemy.hp <= 0
+            ? this.#rerender(enemyNode, "delete")
+            : this.#rerender(enemyNode, "health", enemy);
+        });
+
+        break;
+
       default:
         break;
     }
+  }
+
+  #findEnemies(character) {
+    const x = character.position.x;
+    const y = character.position.y;
+    const id = character.id;
+
+    let result = [];
+    result.push(
+      this.ctx.characterList.find(
+        (character) =>
+          character.position.x === x &&
+          character.position.y === y &&
+          character.id !== id
+      )
+    );
+    result.push(
+      this.ctx.characterList.find(
+        (character) =>
+          character.position.x === x + 1 && character.position.y === y
+      )
+    );
+    result.push(
+      this.ctx.characterList.find(
+        (character) =>
+          character.position.x === x && character.position.y === y + 1
+      )
+    );
+    result.push(
+      this.ctx.characterList.find(
+        (character) =>
+          character.position.x === x - 1 && character.position.y === y
+      )
+    );
+    result.push(
+      this.ctx.characterList.find(
+        (character) =>
+          character.position.x === x && character.position.y === y - 1
+      )
+    );
+
+    result = result.filter(Boolean);
+
+    return result;
   }
 
   #checkBonus(hero) {
@@ -230,7 +298,7 @@ class Game {
       switch (bonus.type) {
         case "heal":
           hero.heal(this.ctx);
-          this.#rerender(heroNode, "heal", hero);
+          this.#rerender(heroNode, "health", hero);
           break;
 
         case "sword":
@@ -242,7 +310,7 @@ class Game {
       }
 
       this.ctx.removeBonusById(bonus.id);
-      this.#rerender(document.getElementById(bonus.id), "delete");
+      this.#rerender(document.getElementById("bonus" + bonus.id), "delete");
     }
   }
 
@@ -255,7 +323,7 @@ class Game {
       case "delete":
         node.remove();
         break;
-      case "heal":
+      case "health":
         node.firstElementChild.style.width = obj.hp + "%";
         break;
       default:

@@ -23,18 +23,21 @@ class Character {
   }
 
   attack(enemy, ctx) {
-    if (enemy) {
-      enemy.hp = enemy.hp - this.#power;
+    enemy.hp = enemy.hp - this.#power;
+
+    if (enemy.hp <= 0) {
+      enemy.die(ctx);
+      return;
     }
 
-    characterIndex = ctx.characterList.findIndex(
-      (character) => (character.id = enemy.id)
+    const characterIndex = ctx.characterList.findIndex(
+      (character) => character.id === enemy.id
     );
 
     ctx.characterList = [
       ...ctx.characterList.slice(0, characterIndex),
       enemy,
-      ctx.characterList.slice(characterIndex + 1),
+      ...ctx.characterList.slice(characterIndex + 1),
     ];
   }
 
@@ -49,7 +52,7 @@ class Character {
     ctx.characterList = [
       ...ctx.characterList.slice(0, characterIndex),
       this,
-      ctx.characterList.slice(characterIndex + 1),
+      ...ctx.characterList.slice(characterIndex + 1),
     ];
   }
 
@@ -63,7 +66,7 @@ class Character {
     ctx.characterList = [
       ...ctx.characterList.slice(0, characterIndex),
       this,
-      ctx.characterList.slice(characterIndex + 1),
+      ...ctx.characterList.slice(characterIndex + 1),
     ];
   }
 
@@ -72,7 +75,6 @@ class Character {
    */
   set hp(value) {
     this.#hp = value;
-    if (this.#hp <= 0) this.die();
   }
 
   get hp() {
