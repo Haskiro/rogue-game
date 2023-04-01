@@ -1,9 +1,10 @@
 class Game {
-  #map = [];
+  #ctx;
 
   init() {
+    this.#ctx = new Context();
     const field = document.querySelector(".field");
-    this.#map = this.#generateMap();
+    this.#ctx.map = this.#generateMap();
 
     this.#renderMap(field);
   }
@@ -14,8 +15,6 @@ class Game {
     const map = [...new Array(height)].map(() =>
       new Array(width).fill({
         isWall: true,
-        bonus: null,
-        personId: null,
       })
     );
 
@@ -27,8 +26,8 @@ class Game {
     for (let i = 0; i < roomsCount; i++) {
       const width = randomInteger(3, 8);
       const height = randomInteger(3, 8);
-      const x = randomInteger(0, this.#map[0].length - 1);
-      const y = randomInteger(0, this.#map.length - 1);
+      const x = randomInteger(0, this.#ctx.map[0].length - 1);
+      const y = randomInteger(0, this.#ctx.map.length - 1);
 
       this.#setWall(width, height, x, y);
     }
@@ -38,10 +37,10 @@ class Game {
     const lineCount = randomInteger(3, 5);
     for (let i = 0; i < lineCount; i++) {
       this.#setWall(
-        this.#map[0].length,
+        this.#ctx.map[0].length,
         1,
         0,
-        randomInteger(0, this.#map.length - 1)
+        randomInteger(0, this.#ctx.map.length - 1)
       );
     }
   }
@@ -51,50 +50,79 @@ class Game {
     for (let i = 0; i < columnCount; i++) {
       this.#setWall(
         1,
-        this.#map.length,
-        randomInteger(0, this.#map[0].length - 1),
+        this.#ctx.map.length,
+        randomInteger(0, this.#ctx.map[0].length - 1),
         0
       );
     }
   }
 
   #setWall(width, height, x, y) {
-    for (let i = x; i < x + width && i < this.#map[0].length; i++) {
-      for (let j = y; j < y + height && j < this.#map.length; j++) {
-        this.#map[j][i] = { ...this.#map[j][i], isWall: false };
+    for (let i = x; i < x + width && i < this.#ctx.map[0].length; i++) {
+      for (let j = y; j < y + height && j < this.#ctx.map.length; j++) {
+        this.#ctx.map[j][i] = { ...this.#ctx.map[j][i], isWall: false };
       }
     }
   }
 
   clear() {
-    this.#map = null;
+    this.#ctx.map = null;
   }
 
   #renderMap(field) {
-    field.style.width = 30 * this.#map[0].length + "px";
-    field.style.height = 30 * this.#map.length + "px";
+    field.style.width = 30 * this.#ctx.map[0].length + "px";
+    field.style.height = 30 * this.#ctx.map.length + "px";
 
     this.#generateRooms();
     this.#generateLines();
     this.#generateColumns();
 
-    for (let i = 0; i < this.#map.length; i++) {
-      for (let j = 0; j < this.#map[0].length; j++) {
+    for (let i = 0; i < this.#ctx.map.length; i++) {
+      for (let j = 0; j < this.#ctx.map[0].length; j++) {
         const cell = document.createElement("div");
-        this.#map[i][j].isWall
-          ? cell.classList.add("tileW")
-          : cell.classList.add("tile");
+        cell.classList.add("tile");
+        this.#ctx.map[i][j].isWall ? cell.classList.add("tileW") : null;
         cell.style.left = j * 30 + "px";
         cell.style.top = i * 30 + "px";
 
         field.appendChild(cell);
       }
     }
+
+    this.#renderBonus(field, 2, "sword", "tileSW");
+    this.#renderBonus(field, 10, "heal", "tileHP");
+  }
+
+  #renderBonus(field, bonusCount, type, bonusClass) {
+    for (let i = 0; i < bonusCount; i++) {
+      const [x, y] = this.#getRandomFreeCell();
+
+      this.#ctx.bonusList = [...this.#ctx.bonusList, new Bonus(type, { x, y })];
+
+      const bonus = document.createElement("div");
+      bonus.classList.add("tile");
+      bonus.classList.add(bonusClass);
+      bonus.style.left = x * 30 + "px";
+      bonus.style.top = y * 30 + "px";
+
+      field.appendChild(bonus);
+    }
+  }
+
+  #getRandomFreeCell() {
+    const x = randomInteger(0, this.#ctx.map[0].length - 1);
+    const y = randomInteger(0, this.#ctx.map.length - 1);
+
+    if (this.#ctx.map[y][x].isWall) {
+      return this.#getRandomFreeCell();
+    }
+
+    return [x, y];
   }
 }
 
-class Person {
-  static person_count = 0;
+class Character {
+  static character_count = 0;
   #type;
   #hp;
   #power;
@@ -106,7 +134,7 @@ class Person {
     this.#hp = hp;
     this.#power = power;
     this.#position = position;
-    this.#id = ++person_count;
+    this.#id = ++Character.character_count;
   }
 
   move(x, y) {
@@ -115,33 +143,37 @@ class Person {
   }
 
   die(ctx) {
-    return ctx.removePersonById(this.#id);
+    return ctx.removeCharacterById(this.#id);
   }
 
   attack(enemy, ctx) {
     if (enemy) {
-      enemy.hp(enemy.hp - this.#power);
+      enemy.hp = enemy.hp - this.#power;
     }
 
-    personIndex = ctx.personList.findIndex((person) => (person.id = enemy.id));
+    characterIndex = ctx.characterList.findIndex(
+      (character) => (character.id = enemy.id)
+    );
 
-    ctx.personList([
-      ...ctx.personList.slice(0, personIndex),
+    ctx.characterList = [
+      ...ctx.characterList.slice(0, characterIndex),
       enemy,
-      ctx.personList.slice(personIndex + 1),
-    ]);
+      ctx.characterList.slice(characterIndex + 1),
+    ];
   }
 
   heal(ctx) {
     this.#hp += 20;
 
-    personIndex = ctx.personList.findIndex((person) => (person.id = this.id));
+    characterIndex = ctx.characterList.findIndex(
+      (character) => (character.id = this.id)
+    );
 
-    ctx.personList([
-      ...ctx.personList.slice(0, personIndex),
+    ctx.characterList = [
+      ...ctx.characterList.slice(0, characterIndex),
       this,
-      ctx.personList.slice(personIndex + 1),
-    ]);
+      ctx.characterList.slice(characterIndex + 1),
+    ];
   }
 
   /**
@@ -184,10 +216,12 @@ class Bonus {
   static bonusCount = 0;
   #type;
   #id;
+  #position;
 
-  constructor(type) {
+  constructor(type, position) {
     this.#type = type;
-    this.#id = ++bonusCount;
+    this.#position = { x: position.x, y: position.y };
+    this.#id = ++Bonus.bonusCount;
   }
 
   get type() {
@@ -197,31 +231,45 @@ class Bonus {
   get id() {
     return this.#id;
   }
+
+  get position() {
+    return this.#position;
+  }
 }
 
 class Context {
-  #bonusList;
-  #personList;
+  #bonusList = [];
+  #characterList = [];
+  #map;
   #instance;
 
   constructor() {
     if (this.#instance) return this.#instance;
+    this.#instance = this;
   }
 
-  get personList() {
-    return this.#bonusList;
+  get characterList() {
+    return this.#characterList;
   }
 
-  set personList(newList) {
-    this.#bonusList = newList;
+  set characterList(newList) {
+    this.#characterList = newList;
   }
 
   get bonusList() {
-    return this.#personList;
+    return this.#bonusList;
   }
 
   set bonusList(newList) {
     this.#bonusList = newList;
+  }
+
+  get map() {
+    return this.#map;
+  }
+
+  set map(newMap) {
+    this.#map = newMap;
   }
 
   removeBonusById(id) {
@@ -232,11 +280,13 @@ class Context {
     ];
   }
 
-  removePersonById(id) {
-    personIndex = this.#personList.findIndex((person) => person.id === id);
-    this.#personList = [
-      ...this.#personList.slice(0, personIndex),
-      this.#personList.slice(personIndex + 1),
+  removeCharacterById(id) {
+    characterIndex = this.#characterList.findIndex(
+      (character) => character.id === id
+    );
+    this.#characterList = [
+      ...this.#characterList.slice(0, characterIndex),
+      this.#characterList.slice(characterIndex + 1),
     ];
   }
 }
