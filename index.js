@@ -98,6 +98,7 @@ class Game {
       const [x, y] = this.#getRandomFreeCell();
 
       this.#ctx.bonusList = [...this.#ctx.bonusList, new Bonus(type, { x, y })];
+      this.#ctx.map[y][x];
 
       const bonus = document.createElement("div");
       bonus.classList.add("tile");
@@ -113,7 +114,12 @@ class Game {
     const x = randomInteger(0, this.#ctx.map[0].length - 1);
     const y = randomInteger(0, this.#ctx.map.length - 1);
 
-    if (this.#ctx.map[y][x].isWall) {
+    if (
+      this.#ctx.map[y][x].isWall ||
+      this.#ctx.bonusList.some(
+        (bonus) => bonus.position.x === x && bonus.position.y === y
+      )
+    ) {
       return this.#getRandomFreeCell();
     }
 
