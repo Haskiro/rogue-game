@@ -91,6 +91,8 @@ class Game {
 
     this.#renderBonus(field, 2, "sword", "tileSW");
     this.#renderBonus(field, 10, "heal", "tileHP");
+    this.#renderCharacter(field, 1, "hero", "tileP", 20);
+    this.#renderCharacter(field, 10, "enemy", "tileE", 10);
   }
 
   #renderBonus(field, bonusCount, type, bonusClass) {
@@ -98,7 +100,6 @@ class Game {
       const [x, y] = this.#getRandomFreeCell();
 
       this.#ctx.bonusList = [...this.#ctx.bonusList, new Bonus(type, { x, y })];
-      this.#ctx.map[y][x];
 
       const bonus = document.createElement("div");
       bonus.classList.add("tile");
@@ -107,6 +108,30 @@ class Game {
       bonus.style.top = y * 30 + "px";
 
       field.appendChild(bonus);
+    }
+  }
+
+  #renderCharacter(field, characterCount, type, characterClass, power) {
+    for (let i = 0; i < characterCount; i++) {
+      const [x, y] = this.#getRandomFreeCell();
+
+      this.#ctx.characterList = [
+        ...this.#ctx.characterList,
+        new Character(type, power, { x, y }),
+      ];
+
+      const health = document.createElement("div");
+      health.classList.add("health");
+      health.style.width = "100%";
+
+      const character = document.createElement("div");
+      character.classList.add("tile");
+      character.classList.add(characterClass);
+      character.style.left = x * 30 + "px";
+      character.style.top = y * 30 + "px";
+
+      character.appendChild(health);
+      field.appendChild(character);
     }
   }
 
@@ -130,14 +155,13 @@ class Game {
 class Character {
   static character_count = 0;
   #type;
-  #hp;
+  #hp = 100;
   #power;
   #position;
   #id;
 
-  constructor(type, hp, power, position) {
+  constructor(type, power, position) {
     this.#type = type;
-    this.#hp = hp;
     this.#power = power;
     this.#position = position;
     this.#id = ++Character.character_count;
@@ -170,6 +194,7 @@ class Character {
 
   heal(ctx) {
     this.#hp += 20;
+    if (this.#hp > 100) this.#hp = 100;
 
     characterIndex = ctx.characterList.findIndex(
       (character) => (character.id = this.id)
@@ -201,7 +226,7 @@ class Character {
     this.#power = value;
   }
 
-  get hp() {
+  get power() {
     return this.#power;
   }
 
@@ -214,7 +239,7 @@ class Character {
   }
 
   get type() {
-    return this.#position;
+    return this.#type;
   }
 }
 
