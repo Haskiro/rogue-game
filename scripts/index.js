@@ -102,11 +102,12 @@ class Game {
     for (let i = 0; i < bonusCount; i++) {
       const [x, y] = this.#getRandomFreeCell();
 
-      this.ctx.bonusList = [...this.ctx.bonusList, new Bonus(type, { x, y })];
+      const bonus = new Bonus(type, { x, y });
+      this.ctx.bonusList = [...this.ctx.bonusList, bonus];
 
-      const bonus = this.#createChild(x, y, bonusClass);
+      const bonusNode = this.#createChild(x, y, bonusClass, bonus.id);
 
-      field.appendChild(bonus);
+      field.appendChild(bonusNode);
     }
   }
 
@@ -130,10 +131,11 @@ class Game {
     }
   }
 
-  #createChild(x, y, className = null) {
+  #createChild(x, y, className = null, id = null) {
     const child = document.createElement("div");
     child.classList.add("tile");
     if (className) child.classList.add(className);
+    if (id) child.setAttribute("id", id);
     child.style.left = x * 30 + "px";
     child.style.top = y * 30 + "px";
 
@@ -164,11 +166,9 @@ class Game {
       return;
     }
 
-    const heroIndex = this.ctx.characterList.findIndex(
+    const hero = this.ctx.characterList.find(
       (character) => character.type === "hero"
     );
-
-    const hero = this.ctx.characterList[heroIndex];
     const heroNode = document.querySelector(".tileP");
 
     switch (ev.key) {
@@ -178,7 +178,8 @@ class Game {
           !this.ctx.map[hero.position.y - 1][hero.position.x].isWall
         ) {
           hero.move(0, -1);
-          this.#rerender(heroNode, hero, "move");
+          this.#rerender(heroNode, "move", hero);
+          this.#checkBonus(hero);
         }
         break;
       case "a":
@@ -187,7 +188,8 @@ class Game {
           !this.ctx.map[hero.position.y][hero.position.x - 1].isWall
         ) {
           hero.move(-1, 0);
-          this.#rerender(heroNode, hero, "move");
+          this.#rerender(heroNode, "move", hero);
+          this.#checkBonus(hero);
         }
         break;
       case "s":
@@ -196,7 +198,8 @@ class Game {
           !this.ctx.map[hero.position.y + 1][hero.position.x].isWall
         ) {
           hero.move(0, 1);
-          this.#rerender(heroNode, hero, "move");
+          this.#rerender(heroNode, "move", hero);
+          this.#checkBonus(hero);
         }
         break;
       case "d":
@@ -205,7 +208,8 @@ class Game {
           !this.ctx.map[hero.position.y][hero.position.x + 1].isWall
         ) {
           hero.move(1, 0);
-          this.#rerender(heroNode, hero, "move");
+          this.#rerender(heroNode, "move", hero);
+          this.#checkBonus(hero);
         }
         break;
       default:
@@ -213,11 +217,49 @@ class Game {
     }
   }
 
-  #rerender(node, obj, action) {
+  #checkBonus(hero) {
+    const bonus = this.ctx.bonusList.find((bonus) => {
+      return (
+        bonus.position.x === hero.position.x &&
+        bonus.position.y === hero.position.y
+      );
+    });
+
+    if (bonus) {
+      const heroNode = document.querySelector(".tileP");
+      switch (bonus.type) {
+        case "heal":
+          hero.heal(this.ctx);
+          this.#rerender(heroNode, "heal", hero);
+          break;
+
+        case "sword":
+          hero.increasePower(this.ctx);
+          break;
+
+        default:
+          break;
+      }
+
+      this.ctx.removeBonusById(bonus.id);
+      this.#rerender(document.getElementById(bonus.id), "delete");
+    }
+  }
+
+  #rerender(node, action, obj = null) {
     switch (action) {
       case "move":
         node.style.left = 30 * obj.position.x + "px";
         node.style.top = 30 * obj.position.y + "px";
+        break;
+      case "delete":
+        node.remove();
+        break;
+      case "heal":
+        node.firstElementChild.style.width = obj.hp + "%";
+        break;
+      default:
+        break;
     }
   }
 }

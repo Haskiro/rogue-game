@@ -34,15 +34,15 @@ class Context {
   }
 
   removeBonusById(id) {
-    bonusIndex = this.#bonusList.findIndex((bonus) => bonus.id === id);
+    const bonusIndex = this.#bonusList.findIndex((bonus) => bonus.id === id);
     this.#bonusList = [
       ...this.#bonusList.slice(0, bonusIndex),
-      this.#bonusList.slice(bonusIndex + 1),
+      ...this.#bonusList.slice(bonusIndex + 1),
     ];
   }
 
   removeCharacterById(id) {
-    characterIndex = this.#characterList.findIndex(
+    const characterIndex = this.#characterList.findIndex(
       (character) => character.id === id
     );
     this.#characterList = [

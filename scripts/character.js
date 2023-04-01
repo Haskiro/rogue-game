@@ -42,8 +42,22 @@ class Character {
     this.#hp += 20;
     if (this.#hp > 100) this.#hp = 100;
 
-    characterIndex = ctx.characterList.findIndex(
-      (character) => (character.id = this.id)
+    const characterIndex = ctx.characterList.findIndex(
+      (character) => character.id === this.id
+    );
+
+    ctx.characterList = [
+      ...ctx.characterList.slice(0, characterIndex),
+      this,
+      ctx.characterList.slice(characterIndex + 1),
+    ];
+  }
+
+  increasePower(ctx) {
+    this.#power += 10;
+
+    const characterIndex = ctx.characterList.findIndex(
+      (character) => character.id === this.id
     );
 
     ctx.characterList = [
