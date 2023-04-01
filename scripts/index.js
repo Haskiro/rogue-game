@@ -1,12 +1,13 @@
 class Game {
-  #ctx;
+  ctx;
 
   init() {
-    this.#ctx = new Context();
+    this.ctx = new Context();
     const field = document.querySelector(".field");
-    this.#ctx.map = this.#generateMap();
+    this.ctx.map = this.#generateMap();
 
     this.#renderMap(field);
+    window.addEventListener("keydown", (ev) => this.onKeyDown(ev));
   }
 
   #generateMap() {
@@ -26,8 +27,8 @@ class Game {
     for (let i = 0; i < roomsCount; i++) {
       const width = randomInteger(3, 8);
       const height = randomInteger(3, 8);
-      const x = randomInteger(0, this.#ctx.map[0].length - 1);
-      const y = randomInteger(0, this.#ctx.map.length - 1);
+      const x = randomInteger(0, this.ctx.map[0].length - 1);
+      const y = randomInteger(0, this.ctx.map.length - 1);
 
       this.#setWall(width, height, x, y);
     }
@@ -37,10 +38,10 @@ class Game {
     const lineCount = randomInteger(3, 5);
     for (let i = 0; i < lineCount; i++) {
       this.#setWall(
-        this.#ctx.map[0].length,
+        this.ctx.map[0].length,
         1,
         0,
-        randomInteger(0, this.#ctx.map.length - 1)
+        randomInteger(0, this.ctx.map.length - 1)
       );
     }
   }
@@ -50,38 +51,38 @@ class Game {
     for (let i = 0; i < columnCount; i++) {
       this.#setWall(
         1,
-        this.#ctx.map.length,
-        randomInteger(0, this.#ctx.map[0].length - 1),
+        this.ctx.map.length,
+        randomInteger(0, this.ctx.map[0].length - 1),
         0
       );
     }
   }
 
   #setWall(width, height, x, y) {
-    for (let i = x; i < x + width && i < this.#ctx.map[0].length; i++) {
-      for (let j = y; j < y + height && j < this.#ctx.map.length; j++) {
-        this.#ctx.map[j][i] = { ...this.#ctx.map[j][i], isWall: false };
+    for (let i = x; i < x + width && i < this.ctx.map[0].length; i++) {
+      for (let j = y; j < y + height && j < this.ctx.map.length; j++) {
+        this.ctx.map[j][i] = { ...this.ctx.map[j][i], isWall: false };
       }
     }
   }
 
   clear() {
-    this.#ctx.map = null;
+    this.ctx.map = null;
   }
 
   #renderMap(field) {
-    field.style.width = 30 * this.#ctx.map[0].length + "px";
-    field.style.height = 30 * this.#ctx.map.length + "px";
+    field.style.width = 30 * this.ctx.map[0].length + "px";
+    field.style.height = 30 * this.ctx.map.length + "px";
 
     this.#generateRooms();
     this.#generateLines();
     this.#generateColumns();
 
-    for (let i = 0; i < this.#ctx.map.length; i++) {
-      for (let j = 0; j < this.#ctx.map[0].length; j++) {
+    for (let i = 0; i < this.ctx.map.length; i++) {
+      for (let j = 0; j < this.ctx.map[0].length; j++) {
         let cell;
 
-        if (this.#ctx.map[i][j].isWall) {
+        if (this.ctx.map[i][j].isWall) {
           cell = this.#createChild(j, i, "tileW");
         } else {
           cell = this.#createChild(j, i);
@@ -101,7 +102,7 @@ class Game {
     for (let i = 0; i < bonusCount; i++) {
       const [x, y] = this.#getRandomFreeCell();
 
-      this.#ctx.bonusList = [...this.#ctx.bonusList, new Bonus(type, { x, y })];
+      this.ctx.bonusList = [...this.ctx.bonusList, new Bonus(type, { x, y })];
 
       const bonus = this.#createChild(x, y, bonusClass);
 
@@ -113,8 +114,8 @@ class Game {
     for (let i = 0; i < characterCount; i++) {
       const [x, y] = this.#getRandomFreeCell();
 
-      this.#ctx.characterList = [
-        ...this.#ctx.characterList,
+      this.ctx.characterList = [
+        ...this.ctx.characterList,
         new Character(type, power, { x, y }),
       ];
 
@@ -140,19 +141,84 @@ class Game {
   }
 
   #getRandomFreeCell() {
-    const x = randomInteger(0, this.#ctx.map[0].length - 1);
-    const y = randomInteger(0, this.#ctx.map.length - 1);
+    const x = randomInteger(0, this.ctx.map[0].length - 1);
+    const y = randomInteger(0, this.ctx.map.length - 1);
 
     if (
-      this.#ctx.map[y][x].isWall ||
-      this.#ctx.bonusList.some(
+      this.ctx.map[y][x].isWall ||
+      this.ctx.bonusList.some(
         (bonus) => bonus.position.x === x && bonus.position.y === y
+      ) ||
+      this.ctx.characterList.some(
+        (character) => character.position.x === x && character.position.y === y
       )
     ) {
       return this.#getRandomFreeCell();
     }
 
     return [x, y];
+  }
+
+  onKeyDown(ev) {
+    if (ev.key !== "w" && ev.key !== "a" && ev.key !== "s" && ev.key !== "d") {
+      return;
+    }
+
+    const heroIndex = this.ctx.characterList.findIndex(
+      (character) => character.type === "hero"
+    );
+
+    const hero = this.ctx.characterList[heroIndex];
+    const heroNode = document.querySelector(".tileP");
+
+    switch (ev.key) {
+      case "w":
+        if (
+          hero.position.y - 1 >= 0 &&
+          !this.ctx.map[hero.position.y - 1][hero.position.x].isWall
+        ) {
+          hero.move(0, -1);
+          this.#rerender(heroNode, hero, "move");
+        }
+        break;
+      case "a":
+        if (
+          hero.position.x - 1 >= 0 &&
+          !this.ctx.map[hero.position.y][hero.position.x - 1].isWall
+        ) {
+          hero.move(-1, 0);
+          this.#rerender(heroNode, hero, "move");
+        }
+        break;
+      case "s":
+        if (
+          hero.position.y + 1 < this.ctx.map.length &&
+          !this.ctx.map[hero.position.y + 1][hero.position.x].isWall
+        ) {
+          hero.move(0, 1);
+          this.#rerender(heroNode, hero, "move");
+        }
+        break;
+      case "d":
+        if (
+          hero.position.x + 1 < this.ctx.map[0].length &&
+          !this.ctx.map[hero.position.y][hero.position.x + 1].isWall
+        ) {
+          hero.move(1, 0);
+          this.#rerender(heroNode, hero, "move");
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  #rerender(node, obj, action) {
+    switch (action) {
+      case "move":
+        node.style.left = 30 * obj.position.x + "px";
+        node.style.top = 30 * obj.position.y + "px";
+    }
   }
 }
 
