@@ -79,11 +79,13 @@ class Game {
 
     for (let i = 0; i < this.#ctx.map.length; i++) {
       for (let j = 0; j < this.#ctx.map[0].length; j++) {
-        const cell = document.createElement("div");
-        cell.classList.add("tile");
-        this.#ctx.map[i][j].isWall ? cell.classList.add("tileW") : null;
-        cell.style.left = j * 30 + "px";
-        cell.style.top = i * 30 + "px";
+        let cell;
+
+        if (this.#ctx.map[i][j].isWall) {
+          cell = this.#createChild(j, i, "tileW");
+        } else {
+          cell = this.#createChild(j, i);
+        }
 
         field.appendChild(cell);
       }
@@ -101,11 +103,7 @@ class Game {
 
       this.#ctx.bonusList = [...this.#ctx.bonusList, new Bonus(type, { x, y })];
 
-      const bonus = document.createElement("div");
-      bonus.classList.add("tile");
-      bonus.classList.add(bonusClass);
-      bonus.style.left = x * 30 + "px";
-      bonus.style.top = y * 30 + "px";
+      const bonus = this.#createChild(x, y, bonusClass);
 
       field.appendChild(bonus);
     }
@@ -124,15 +122,21 @@ class Game {
       health.classList.add("health");
       health.style.width = "100%";
 
-      const character = document.createElement("div");
-      character.classList.add("tile");
-      character.classList.add(characterClass);
-      character.style.left = x * 30 + "px";
-      character.style.top = y * 30 + "px";
+      const character = this.#createChild(x, y, characterClass);
 
       character.appendChild(health);
       field.appendChild(character);
     }
+  }
+
+  #createChild(x, y, className = null) {
+    const child = document.createElement("div");
+    child.classList.add("tile");
+    if (className) child.classList.add(className);
+    child.style.left = x * 30 + "px";
+    child.style.top = y * 30 + "px";
+
+    return child;
   }
 
   #getRandomFreeCell() {
