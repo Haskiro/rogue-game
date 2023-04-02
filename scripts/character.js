@@ -5,6 +5,7 @@ class Character {
   #power;
   #position;
   #id;
+  #movingInterval;
 
   constructor(type, power, position) {
     this.#type = type;
@@ -20,6 +21,7 @@ class Character {
   }
 
   die(ctx) {
+    clearInterval(this.#movingInterval);
     ctx.removeCharacterById(this.#id);
     // console.log("die");
   }
@@ -57,6 +59,14 @@ class Character {
 
   get hp() {
     return this.#hp;
+  }
+
+  set movingInterval(value) {
+    this.#movingInterval = value;
+  }
+
+  get movingInterval() {
+    return this.#movingInterval;
   }
 
   /**

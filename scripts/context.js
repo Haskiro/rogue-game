@@ -46,12 +46,10 @@ class Context {
       (character) => character.id === id
     );
 
-    if (characterIndex !== -1) {
-      this.#characterList = [
-        ...this.#characterList.slice(0, characterIndex),
-        ...this.#characterList.slice(characterIndex + 1),
-      ];
-    }
+    this.#characterList = [
+      ...this.#characterList.slice(0, characterIndex),
+      ...this.#characterList.slice(characterIndex + 1),
+    ];
   }
 
   updateCharacter(newCharacter) {
@@ -59,12 +57,10 @@ class Context {
       (character) => character.id === newCharacter.id
     );
 
-    if (characterIndex !== -1) {
-      this.#characterList = [
-        ...this.#characterList.slice(0, characterIndex),
-        newCharacter,
-        ...this.#characterList.slice(characterIndex + 1),
-      ];
-    }
+    this.#characterList = [
+      ...this.#characterList.slice(0, characterIndex),
+      newCharacter,
+      ...this.#characterList.slice(characterIndex + 1),
+    ];
   }
 }

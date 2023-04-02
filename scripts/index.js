@@ -171,7 +171,7 @@ class Game {
       let way = this.#generateRandomAxis(character);
       const enemyNode = document.getElementById("character" + character.id);
 
-      setInterval(() => {
+      const interval = setInterval(() => {
         const x = character.position.x;
         const y = character.position.y;
         let newX;
@@ -244,6 +244,8 @@ class Game {
           default:
             break;
         }
+
+        character.movingInterval = interval;
 
         this.ctx.updateCharacter(character);
         this.#rerender(enemyNode, "move", character);
