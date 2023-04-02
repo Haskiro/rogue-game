@@ -96,6 +96,7 @@ class Game {
     this.#renderBonus(field, 10, "heal", "tileHP");
     this.#renderCharacter(field, 1, "hero", "tileP", 20);
     this.#renderCharacter(field, 10, "enemy", "tileE", 10);
+    this.#moveEnemies();
   }
 
   #renderBonus(field, bonusCount, type, bonusClass) {
@@ -162,6 +163,127 @@ class Game {
     }
 
     return [x, y];
+  }
+
+  #moveEnemies() {
+    this.ctx.characterList.forEach((character) => {
+      if (character.type === "hero") return;
+      let way = this.#generateRandomAxis(character);
+      const enemyNode = document.getElementById("character" + character.id);
+
+      setInterval(() => {
+        const x = character.position.x;
+        const y = character.position.y;
+        let newX;
+        let newY;
+
+        switch (way) {
+          case 1:
+            if (y - 1 < 0 || this.ctx.map[y - 1][x].isWall) {
+              newY = y + 1;
+              newX = x;
+              way = 3;
+            } else {
+              newY = y - 1;
+              newX = x;
+            }
+            character.position = {
+              x: newX,
+              y: newY,
+            };
+            break;
+
+          case 2:
+            if (x - 1 < 0 || this.ctx.map[y][x - 1].isWall) {
+              newY = y;
+              newX = x + 1;
+              way = 4;
+            } else {
+              newY = y;
+              newX = x - 1;
+            }
+            character.position = {
+              x: newX,
+              y: newY,
+            };
+            break;
+
+          case 3:
+            if (y + 1 >= this.ctx.map.length || this.ctx.map[y + 1][x].isWall) {
+              newY = y - 1;
+              newX = x;
+              way = 1;
+            } else {
+              newY = y + 1;
+              newX = x;
+            }
+            character.position = {
+              x: newX,
+              y: newY,
+            };
+            break;
+
+          case 4:
+            if (
+              x + 1 >= this.ctx.map[0].length ||
+              this.ctx.map[y][x + 1].isWall
+            ) {
+              newY = y;
+              newX = x - 1;
+              way = 2;
+            } else {
+              newY = y;
+              newX = x + 1;
+            }
+            character.position = {
+              x: newX,
+              y: newY,
+            };
+            break;
+
+          default:
+            break;
+        }
+
+        this.ctx.updateCharacter(character);
+        this.#rerender(enemyNode, "move", character);
+      }, 400);
+    });
+  }
+
+  #generateRandomAxis(enemy) {
+    const way = randomInteger(1, 4);
+    let cell;
+    const x = enemy.position.x;
+    const y = enemy.position.y;
+
+    switch (way) {
+      case 1:
+        if (y - 1 >= 0) cell = this.ctx.map[y - 1][x];
+
+        break;
+
+      case 2:
+        if (x - 1 >= 0) cell = this.ctx.map[y][x - 1];
+        break;
+
+      case 3:
+        if (y + 1 < this.ctx.map.length) cell = this.ctx.map[y + 1][x];
+        break;
+
+      case 4:
+        if (x + 1 < this.ctx.map[0].length) cell = this.ctx.map[y][x + 1];
+        break;
+
+      default:
+        break;
+    }
+
+    if (!cell || cell.isWall) {
+      return this.#generateRandomAxis(enemy);
+    }
+
+    return way;
   }
 
   onKeyDown(ev) {
@@ -264,7 +386,6 @@ class Game {
   #findEnemies(character) {
     const x = character.position.x;
     const y = character.position.y;
-    const id = character.id;
 
     let result = [];
 

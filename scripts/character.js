@@ -1,7 +1,7 @@
 class Character {
   static character_count = 0;
   #type;
-  #hp = 100;
+  #hp;
   #power;
   #position;
   #id;
@@ -11,6 +11,7 @@ class Character {
     this.#power = power;
     this.#position = position;
     this.#id = ++Character.character_count;
+    this.#hp = 100;
   }
 
   move(x, y) {
@@ -98,6 +99,10 @@ class Character {
 
   get position() {
     return this.#position;
+  }
+
+  set position(newPosition) {
+    this.#position = newPosition;
   }
 
   get type() {
