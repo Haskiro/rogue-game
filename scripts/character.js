@@ -23,7 +23,6 @@ class Character {
   die(ctx) {
     clearInterval(this.#movingInterval);
     ctx.removeCharacterById(this.#id);
-    // console.log("die");
   }
 
   attack(enemy, ctx) {

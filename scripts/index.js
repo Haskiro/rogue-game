@@ -7,7 +7,7 @@ class Game {
     this.ctx.map = this.#generateMap();
 
     this.#renderMap(field);
-    window.addEventListener("keydown", (ev) => this.onKeyDown(ev));
+    window.addEventListener("keydown", this.onKeyDown);
   }
 
   #generateMap() {
@@ -66,8 +66,32 @@ class Game {
     }
   }
 
-  clear() {
-    this.ctx.map = null;
+  clear(result) {
+    this.ctx.characterList.forEach((character) => character.die(this.ctx));
+    this.ctx = undefined;
+    const field = document.querySelector(".field");
+    while (field.hasChildNodes()) {
+      field.removeChild(field.lastChild);
+    }
+
+    const resultNode = document.createElement("div");
+    resultNode.classList.add("result");
+
+    switch (result) {
+      case "win":
+        resultNode.textContent = "Победа!";
+        field.appendChild(resultNode);
+        break;
+
+      case "loose":
+        resultNode.textContent = "Смерть";
+        field.appendChild(resultNode);
+        break;
+
+      default:
+        break;
+    }
+    window.removeEventListener("keydown", this.onKeyDown);
   }
 
   #renderMap(field) {
@@ -170,6 +194,9 @@ class Game {
       if (character.type === "hero") return;
       let way = this.#generateRandomAxis(character);
       const enemyNode = document.getElementById("character" + character.id);
+      const hero = this.ctx.characterList.find(
+        (character) => character.type === "hero"
+      );
 
       const interval = setInterval(() => {
         const x = character.position.x;
@@ -179,7 +206,11 @@ class Game {
 
         switch (way) {
           case 1:
-            if (y - 1 < 0 || this.ctx.map[y - 1][x].isWall) {
+            if (
+              y - 1 < 0 ||
+              this.ctx.map[y - 1][x].isWall ||
+              (y - 1 === hero.position.y && x === hero.position.x)
+            ) {
               newY = y + 1;
               newX = x;
               way = 3;
@@ -194,7 +225,11 @@ class Game {
             break;
 
           case 2:
-            if (x - 1 < 0 || this.ctx.map[y][x - 1].isWall) {
+            if (
+              x - 1 < 0 ||
+              this.ctx.map[y][x - 1].isWall ||
+              (y === hero.position.y && x - 1 === hero.position.x)
+            ) {
               newY = y;
               newX = x + 1;
               way = 4;
@@ -209,7 +244,11 @@ class Game {
             break;
 
           case 3:
-            if (y + 1 >= this.ctx.map.length || this.ctx.map[y + 1][x].isWall) {
+            if (
+              y + 1 >= this.ctx.map.length ||
+              this.ctx.map[y + 1][x].isWall ||
+              (y + 1 === hero.position.y && x === hero.position.x)
+            ) {
               newY = y - 1;
               newX = x;
               way = 1;
@@ -226,7 +265,8 @@ class Game {
           case 4:
             if (
               x + 1 >= this.ctx.map[0].length ||
-              this.ctx.map[y][x + 1].isWall
+              this.ctx.map[y][x + 1].isWall ||
+              (y === hero.position.y && x + 1 === hero.position.x)
             ) {
               newY = y;
               newX = x - 1;
@@ -249,7 +289,18 @@ class Game {
 
         this.ctx.updateCharacter(character);
         this.#rerender(enemyNode, "move", character);
-      }, 400);
+        const enemies = this.#findEnemies(character, "enemy");
+        if (enemies.length > 0) {
+          character.attack(enemies[0], this.ctx);
+          const heroNode = document.getElementById("character" + enemies[0].id);
+          if (hero.hp <= 0) {
+            this.clear("loose");
+            this.#rerender(heroNode, "delete");
+          } else {
+            this.#rerender(heroNode, "health", enemies[0]);
+          }
+        }
+      }, 300);
     });
   }
 
@@ -288,7 +339,7 @@ class Game {
     return way;
   }
 
-  onKeyDown(ev) {
+  onKeyDown = (ev) => {
     if (
       ev.code !== "KeyW" &&
       ev.code !== "KeyA" &&
@@ -369,13 +420,18 @@ class Game {
         break;
 
       case "Space":
-        const enemies = this.#findEnemies(hero);
+        const enemies = this.#findEnemies(hero, "hero");
         enemies.forEach((enemy) => {
           hero.attack(enemy, this.ctx);
           const enemyNode = document.getElementById("character" + enemy.id);
-          enemy.hp <= 0
-            ? this.#rerender(enemyNode, "delete")
-            : this.#rerender(enemyNode, "health", enemy);
+          if (enemy.hp <= 0) {
+            if (this.ctx.characterList.length < 2) {
+              this.clear("win");
+            }
+            this.#rerender(enemyNode, "delete");
+          } else {
+            this.#rerender(enemyNode, "health", enemy);
+          }
         });
 
         break;
@@ -383,38 +439,57 @@ class Game {
       default:
         break;
     }
-  }
+  };
 
-  #findEnemies(character) {
+  #findEnemies(character, type) {
     const x = character.position.x;
     const y = character.position.y;
 
     let result = [];
 
-    result.push(
-      this.ctx.characterList.find(
-        (character) =>
-          character.position.x === x + 1 && character.position.y === y
-      )
-    );
-    result.push(
-      this.ctx.characterList.find(
-        (character) =>
-          character.position.x === x && character.position.y === y + 1
-      )
-    );
-    result.push(
-      this.ctx.characterList.find(
-        (character) =>
-          character.position.x === x - 1 && character.position.y === y
-      )
-    );
-    result.push(
-      this.ctx.characterList.find(
-        (character) =>
-          character.position.x === x && character.position.y === y - 1
-      )
-    );
+    switch (type) {
+      case "hero":
+        result.push(
+          this.ctx.characterList.find(
+            (character) =>
+              character.position.x === x + 1 && character.position.y === y
+          )
+        );
+        result.push(
+          this.ctx.characterList.find(
+            (character) =>
+              character.position.x === x && character.position.y === y + 1
+          )
+        );
+        result.push(
+          this.ctx.characterList.find(
+            (character) =>
+              character.position.x === x - 1 && character.position.y === y
+          )
+        );
+        result.push(
+          this.ctx.characterList.find(
+            (character) =>
+              character.position.x === x && character.position.y === y - 1
+          )
+        );
+        break;
+
+      case "enemy":
+        const hero = this.ctx.characterList.find(
+          (character) => character.type === "hero"
+        );
+
+        if (
+          (x + 1 === hero.position.x && y === hero.position.y) ||
+          (x - 1 === hero.position.x && y === hero.position.y) ||
+          (x === hero.position.x && y + 1 === hero.position.y) ||
+          (x === hero.position.x && y - 1 === hero.position.y)
+        ) {
+          result.push(hero);
+        }
+        break;
+    }
 
     result = result.filter(Boolean);
 

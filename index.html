@@ -56,6 +56,14 @@
         width: 1024px;
         height: 640px;
       }
+      .field .result {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: "Playfair Display";
+        font-size: 40px;
+      }
       .field .tile {
         position: absolute;
         width: 30px;
@@ -71,11 +79,12 @@
       .field .tileE {
         background-image: url(images/tile-E.png);
         z-index: 10;
+        transition: 0.3s linear;
       }
       .field .tileP {
         background-image: url(images/tile-P.png);
         z-index: 10;
-        /* transition: 0.1s linear; */
+        transition: 0.1s linear;
       }
       .field .tileHP {
         background-image: url(images/tile-HP.png);

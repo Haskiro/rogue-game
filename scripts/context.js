@@ -2,12 +2,6 @@ class Context {
   #bonusList = [];
   #characterList = [];
   #map;
-  #instance;
-
-  constructor() {
-    if (this.#instance) return this.#instance;
-    this.#instance = this;
-  }
 
   get characterList() {
     return this.#characterList;
