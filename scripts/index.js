@@ -76,21 +76,12 @@ class Game {
 
     const resultNode = document.createElement("div");
     resultNode.classList.add("result");
+    result === "win"
+      ? (resultNode.textContent = "Победа!")
+      : (resultNode.textContent = "Смерть.");
 
-    switch (result) {
-      case "win":
-        resultNode.textContent = "Победа!";
-        field.appendChild(resultNode);
-        break;
+    field.appendChild(resultNode);
 
-      case "loose":
-        resultNode.textContent = "Смерть";
-        field.appendChild(resultNode);
-        break;
-
-      default:
-        break;
-    }
     window.removeEventListener("keydown", this.onKeyDown);
   }
 
@@ -290,17 +281,27 @@ class Game {
         this.ctx.updateCharacter(character);
         this.#rerender(enemyNode, "move", character);
         const enemies = this.#findEnemies(character, "enemy");
-        if (enemies.length > 0) {
-          character.attack(enemies[0], this.ctx);
-          const heroNode = document.getElementById("character" + enemies[0].id);
-          if (hero.hp <= 0) {
-            this.clear("loose");
-            this.#rerender(heroNode, "delete");
-          } else {
-            this.#rerender(heroNode, "health", enemies[0]);
+        this.#handleAttack(character, enemies, "hero");
+      }, 300);
+    });
+  }
+
+  #handleAttack(character, enemies, characterType = "enemy") {
+    enemies.forEach((enemy) => {
+      character.attack(enemy, this.ctx);
+      const enemyNode = document.getElementById("character" + enemy.id);
+      if (enemy.hp <= 0) {
+        if (characterType === "hero") {
+          this.clear("loose");
+        } else {
+          if (this.ctx.characterList.length < 2) {
+            this.clear("win");
           }
         }
-      }, 300);
+        this.#rerender(enemyNode, "delete");
+      } else {
+        this.#rerender(enemyNode, "health", enemy);
+      }
     });
   }
 
@@ -421,18 +422,7 @@ class Game {
 
       case "Space":
         const enemies = this.#findEnemies(hero, "hero");
-        enemies.forEach((enemy) => {
-          hero.attack(enemy, this.ctx);
-          const enemyNode = document.getElementById("character" + enemy.id);
-          if (enemy.hp <= 0) {
-            if (this.ctx.characterList.length < 2) {
-              this.clear("win");
-            }
-            this.#rerender(enemyNode, "delete");
-          } else {
-            this.#rerender(enemyNode, "health", enemy);
-          }
-        });
+        this.#handleAttack(hero, enemies);
 
         break;
 
