@@ -184,7 +184,12 @@ class Game {
       case "KeyW":
         if (
           hero.position.y - 1 >= 0 &&
-          !this.ctx.map[hero.position.y - 1][hero.position.x].isWall
+          !this.ctx.map[hero.position.y - 1][hero.position.x].isWall &&
+          !this.ctx.characterList.some(
+            (character) =>
+              character.position.x === hero.position.x &&
+              character.position.y === hero.position.y - 1
+          )
         ) {
           hero.move(0, -1);
           this.#rerender(heroNode, "move", hero);
@@ -194,7 +199,12 @@ class Game {
       case "KeyA":
         if (
           hero.position.x - 1 >= 0 &&
-          !this.ctx.map[hero.position.y][hero.position.x - 1].isWall
+          !this.ctx.map[hero.position.y][hero.position.x - 1].isWall &&
+          !this.ctx.characterList.some(
+            (character) =>
+              character.position.x === hero.position.x - 1 &&
+              character.position.y === hero.position.y
+          )
         ) {
           hero.move(-1, 0);
           this.#rerender(heroNode, "move", hero);
@@ -205,7 +215,12 @@ class Game {
       case "KeyS":
         if (
           hero.position.y + 1 < this.ctx.map.length &&
-          !this.ctx.map[hero.position.y + 1][hero.position.x].isWall
+          !this.ctx.map[hero.position.y + 1][hero.position.x].isWall &&
+          !this.ctx.characterList.some(
+            (character) =>
+              character.position.x === hero.position.x &&
+              character.position.y === hero.position.y + 1
+          )
         ) {
           hero.move(0, 1);
           this.#rerender(heroNode, "move", hero);
@@ -216,7 +231,12 @@ class Game {
       case "KeyD":
         if (
           hero.position.x + 1 < this.ctx.map[0].length &&
-          !this.ctx.map[hero.position.y][hero.position.x + 1].isWall
+          !this.ctx.map[hero.position.y][hero.position.x + 1].isWall &&
+          !this.ctx.characterList.some(
+            (character) =>
+              character.position.x === hero.position.x + 1 &&
+              character.position.y === hero.position.y
+          )
         ) {
           hero.move(1, 0);
           this.#rerender(heroNode, "move", hero);
@@ -247,14 +267,7 @@ class Game {
     const id = character.id;
 
     let result = [];
-    result.push(
-      this.ctx.characterList.find(
-        (character) =>
-          character.position.x === x &&
-          character.position.y === y &&
-          character.id !== id
-      )
-    );
+
     result.push(
       this.ctx.characterList.find(
         (character) =>
