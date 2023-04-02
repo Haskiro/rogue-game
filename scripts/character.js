@@ -20,7 +20,8 @@ class Character {
   }
 
   die(ctx) {
-    return ctx.removeCharacterById(this.#id);
+    ctx.removeCharacterById(this.#id);
+    // console.log("die");
   }
 
   attack(enemy, ctx) {
@@ -31,44 +32,20 @@ class Character {
       return;
     }
 
-    const characterIndex = ctx.characterList.findIndex(
-      (character) => character.id === enemy.id
-    );
-
-    ctx.characterList = [
-      ...ctx.characterList.slice(0, characterIndex),
-      enemy,
-      ...ctx.characterList.slice(characterIndex + 1),
-    ];
+    ctx.updateCharacter(enemy);
   }
 
   heal(ctx) {
     this.#hp += 20;
     if (this.#hp > 100) this.#hp = 100;
 
-    const characterIndex = ctx.characterList.findIndex(
-      (character) => character.id === this.id
-    );
-
-    ctx.characterList = [
-      ...ctx.characterList.slice(0, characterIndex),
-      this,
-      ...ctx.characterList.slice(characterIndex + 1),
-    ];
+    ctx.updateCharacter(this);
   }
 
   increasePower(ctx) {
     this.#power += 10;
 
-    const characterIndex = ctx.characterList.findIndex(
-      (character) => character.id === this.id
-    );
-
-    ctx.characterList = [
-      ...ctx.characterList.slice(0, characterIndex),
-      this,
-      ...ctx.characterList.slice(characterIndex + 1),
-    ];
+    ctx.updateCharacter(this);
   }
 
   /**

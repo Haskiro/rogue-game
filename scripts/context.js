@@ -45,20 +45,26 @@ class Context {
     const characterIndex = this.#characterList.findIndex(
       (character) => character.id === id
     );
-    this.#characterList = [
-      ...this.#characterList.slice(0, characterIndex),
-      ...this.#characterList.slice(characterIndex + 1),
-    ];
+
+    if (characterIndex !== -1) {
+      this.#characterList = [
+        ...this.#characterList.slice(0, characterIndex),
+        ...this.#characterList.slice(characterIndex + 1),
+      ];
+    }
   }
 
   updateCharacter(newCharacter) {
     const characterIndex = this.#characterList.findIndex(
       (character) => character.id === newCharacter.id
     );
-    this.#characterList = [
-      ...this.#characterList.slice(0, characterIndex),
-      newCharacter,
-      ...this.#characterList.slice(characterIndex + 1),
-    ];
+
+    if (characterIndex !== -1) {
+      this.#characterList = [
+        ...this.#characterList.slice(0, characterIndex),
+        newCharacter,
+        ...this.#characterList.slice(characterIndex + 1),
+      ];
+    }
   }
 }
